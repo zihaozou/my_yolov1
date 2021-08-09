@@ -1,0 +1,163 @@
+import torch
+import torch.nn as nn
+from torch.nn.modules.activation import Sigmoid
+import torch.utils.model_zoo as mz
+cloudInputDir='/input0'
+class Squeeze(nn.Module):
+    def __init__(self):
+        super(Squeeze, self).__init__()
+
+    def forward(self, x):
+        return x.squeeze()
+class first20Net(nn.Module):
+    def __init__(self,fullConn=False,initWeight=False):
+        super(first20Net,self).__init__()
+        self.fullConn=fullConn
+        self.convLayers=nn.Sequential(
+            nn.Conv2d(3, 64, 7, stride=2,padding=3),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2,stride=2),
+
+            nn.Conv2d(64,192,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2,stride=2),
+
+            nn.Conv2d(192,128,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(128,256,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(256,256,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(256,512,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2,stride=2),
+
+            nn.Conv2d(512,256,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(256,512,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,256,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(256,512,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,256,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(256,512,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,256,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(256,512,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,512,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,1024,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2,stride=2),
+
+            nn.Conv2d(1024,512,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,1024,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(1024,512,1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,1024,3,padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+        )
+        if fullConn==True:
+            self.fullConnLayers = nn.Sequential(
+            nn.AvgPool2d(14),
+            Squeeze(),
+            nn.Linear(1024, 1000),
+            nn.Softmax()
+        )
+    def forward(self,x):
+        x=self.convLayers(x)
+        if self.fullConn:
+            x=self.fullConnLayers(x)
+        return x
+
+##Pre-Trained VGG11
+class pretrainedVGG11(nn.Module):
+    pretrainURL='https://download.pytorch.org/models/vgg11_bn-6002323d.pth'
+    def __init__(self):
+        super(pretrainedVGG11,self).__init__()
+        self.features=nn.Sequential(
+            nn.Conv2d(3,64,3,padding=1,stride=2),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64,128,3,padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(128,256,3,padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(256,256,3,padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(256,512,3,padding=1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,512,3,padding=1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2),
+            nn.Conv2d(512,512,3,padding=1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(512,512,3,padding=1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.MaxPool2d(2),
+        )
+        self.classifier=nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512*7*7,4096),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(),
+            nn.Linear(4096,7*7*30),
+        )
+        
+    def forward(self,x):
+        x = self.classifier(self.features(x))
+        x=x.view(-1,7,7,30)
+        new=x.detach().clone()
+        new[:,:,:,:10]=torch.sigmoid(x[:,:,:,:10])
+        new[:,:,:,10:]=torch.softmax(x[:,:,:,10:],dim=3)
+        return x
+
+
+class vgg19(nn.Module):
+    pretrainedURL='https://download.pytorch.org/models/vgg19_bn-c79401a0.pth'
+    def __init__(self):
+        super(vgg19,self).__init__()
+        self.features=nn.Sequential(
+            nn.Conv2d(3,64,3,padding=1,stride=2),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(3,64,3,padding=1,stride=2),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(0.1, inplace=True),
+            
+
+        )
+
+
+
+
+
+def loadvgg11(cloud=False,pretrain=False):
+    vgg=pretrainedVGG11()
+    if pretrain:
+        state=vgg.state_dict()
+        if cloud:
+            pretrained=torch.load(cloudInputDir+'/vgg11_bn-6002323d.pth')
+        else:
+            pretrained=mz.load_url(vgg.pretrainURL)
+        for k in pretrained.keys():
+            if k in state.keys() and k.startswith('features'):
+                state[k] = pretrained[k]
+        vgg.load_state_dict(state)
+    return vgg
