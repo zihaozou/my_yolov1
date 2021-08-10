@@ -9,72 +9,6 @@ class Squeeze(nn.Module):
 
     def forward(self, x):
         return x.squeeze()
-class first20Net(nn.Module):
-    def __init__(self,fullConn=False,initWeight=False):
-        super(first20Net,self).__init__()
-        self.fullConn=fullConn
-        self.convLayers=nn.Sequential(
-            nn.Conv2d(3, 64, 7, stride=2,padding=3),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.MaxPool2d(2,stride=2),
-
-            nn.Conv2d(64,192,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.MaxPool2d(2,stride=2),
-
-            nn.Conv2d(192,128,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(128,256,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(256,256,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(256,512,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.MaxPool2d(2,stride=2),
-
-            nn.Conv2d(512,256,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(256,512,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(512,256,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(256,512,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(512,256,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(256,512,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(512,256,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(256,512,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(512,512,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(512,1024,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.MaxPool2d(2,stride=2),
-
-            nn.Conv2d(1024,512,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(512,1024,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(1024,512,1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(512,1024,3,padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-        )
-        if fullConn==True:
-            self.fullConnLayers = nn.Sequential(
-            nn.AvgPool2d(14),
-            Squeeze(),
-            nn.Linear(1024, 1000),
-            nn.Softmax()
-        )
-    def forward(self,x):
-        x=self.convLayers(x)
-        if self.fullConn:
-            x=self.fullConnLayers(x)
-        return x
 
 ##Pre-Trained VGG11
 class pretrainedVGG11(nn.Module):
@@ -129,22 +63,6 @@ class pretrainedVGG11(nn.Module):
         return new
 
 
-class vgg19(nn.Module):
-    pretrainedURL='https://download.pytorch.org/models/vgg19_bn-c79401a0.pth'
-    def __init__(self):
-        super(vgg19,self).__init__()
-        self.features=nn.Sequential(
-            nn.Conv2d(3,64,3,padding=1,stride=2),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv2d(3,64,3,padding=1,stride=2),
-            nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.1, inplace=True),
-            
-
-        )
-
-
 
 
 
@@ -161,3 +79,4 @@ def loadvgg11(cloud=False,pretrain=False,do=0.6):
                 state[k] = pretrained[k]
         vgg.load_state_dict(state)
     return vgg
+
