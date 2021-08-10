@@ -15,6 +15,11 @@ VOC_CLASSES = {    # always index 0
     'cow':9, 'diningtable':10, 'dog':11, 'horse':12,
     'motorbike':13, 'person':14, 'pottedplant':15,
     'sheep':16, 'sofa':17, 'train':18, 'tvmonitor':19}
+VOCLIST=['aeroplane', 'bicycle', 'bird', 'boat',
+    'bottle', 'bus', 'car', 'cat', 'chair',
+    'cow', 'diningtable', 'dog', 'horse',
+    'motorbike', 'person', 'pottedplant',
+    'sheep', 'sofa', 'train', 'tvmonitor']
 class myVOCtransform(object):
     def __init__(self,classlist,S=7,B=2,C=20,inputSize=448,train=False):
         super().__init__()
