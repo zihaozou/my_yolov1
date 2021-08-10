@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
 parser.add_argument('--cloud','-c',nargs='?',const=1,default=False,type=bool,help='if on cloud')
 parser.add_argument('--weighted','-w',nargs='?',const=1,type=str,default=None,help='if use pretrained weight')
-parser.add_argument('--batch-size','-b',nargs='?',const=1,default=32,type=int,help='set the batch size')
+parser.add_argument('--batch-size','-b',nargs='?',const=1,default=4,type=int,help='set the batch size')
 parser.add_argument('--epochs','-e',nargs='?',const=1,default=50,type=int,help='the epoch number')
 parser.add_argument('--num-workers','-n',nargs='?',const=1,default=1,type=int,help='number of workers to load data')
 parser.add_argument('--learning-rate','-l',nargs='?',const=1,default=1e-3,type=float)
@@ -22,6 +22,8 @@ parser.add_argument('--cont-factor','-cf',nargs='?',const=1,default=1.,type=floa
 parser.add_argument('--cls-factor','-csf',nargs='?',const=1,default=1.,type=float)
 parser.add_argument('--coord-factor','-cof',nargs='?',const=1,default=5.,type=float)
 parser.add_argument('--noobj-factor','-nof',nargs='?',const=1,default=.5,type=float)
+parser.add_argument('--dropout','-d',nargs='?',const=1,default=.6,type=float)
+parser.add_argument('--nc-factor','-ncf',nargs='?',const=1,default=1,type=float)
 def main():
     args=parser.parse_args()
     print(args)
@@ -34,17 +36,17 @@ def main():
     epochs=args.epochs
     cloudOutputDir='/output/'
     cloudInputDir='/input0/'
-    writer=SummaryWriter(log_dir='./tf_dir')
+    writer=SummaryWriter(log_dir='./tf_dir',)
     batchSize=args.batch_size
     
 
 
-    model=loadvgg11(cloud=cloud,pretrain=True).to(device)
+    model=loadvgg11(cloud=cloud,pretrain=True,do=args.dropout).to(device)
     if args.weighted is not None:
         model.load_state_dict(torch.load(cloudInputDir+args.weighted))
     if args.retrain==True:
         model.load_state_dict(torch.load(cloudOutputDir+'vggYolo.pth'))
-    criterion = yoloLoss(7,2,args.coord_factor,args.noobj_factor,cloud=cloud,cf=args.cont_factor,csf=args.cls_factor)
+    criterion = yoloLoss(7,2,args.coord_factor,args.noobj_factor,cloud=cloud,cf=args.cont_factor,csf=args.cls_factor,nc=args.nc_factor)
     train07DataSet=loadVOCTrainDataSet(cloud=cloud)
     train07Loader=DataLoader(train07DataSet,batch_size=batchSize,shuffle=True,num_workers=args.num_workers)
     val07DataSet=loadVOCValDataSet(cloud=cloud)
@@ -91,7 +93,7 @@ def main():
             image=Variable(image).to(device)
             target=Variable(target).to(device)
             pred=model(image)
-            loss,loc_loss,cont_loss,nocont_loss,noobj_loss,cls_loss=criterion(pred,target)
+            loss,loc_loss,cont_loss,nocont_loss,noobj_loss,cls_loss=criterion(pred,target,val=True)
             if numpy.isnan(loss.item()):
                 print('loss diverge')
                 exit()

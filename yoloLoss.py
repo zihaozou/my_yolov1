@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 #device='cpu'
 class yoloLoss(nn.Module):
-    def __init__(self,S,B,l_coord,l_noobj,cloud=False,cf=1,csf=1):
+    def __init__(self,S,B,l_coord,l_noobj,cloud=False,cf=1,csf=1,nc=1):
         super(yoloLoss,self).__init__()
         self.S = S
         self.B = B
@@ -16,6 +16,7 @@ class yoloLoss(nn.Module):
         self.l_noobj = l_noobj
         self.cf=cf
         self.csf=csf
+        self.nc=nc
         if cloud:
             self.device= 'cuda' if torch.cuda.is_available() else 'cpu'
         else:
@@ -128,7 +129,7 @@ class yoloLoss(nn.Module):
 
         #3.class loss
         class_loss = F.mse_loss(class_pred,class_target,reduction='sum')
-        total_loss=(self.l_coord*loc_loss + contain_loss*self.cf + self.l_noobj*(not_contain_loss + nooobj_loss) + class_loss*self.csf)/N
+        total_loss=(self.l_coord*loc_loss + contain_loss*self.cf + self.nc*not_contain_loss+self.l_noobj*nooobj_loss + class_loss*self.csf)/N
         if val==True:
             return total_loss,loc_loss/N,contain_loss/N,not_contain_loss/N,nooobj_loss/N,class_loss/N
         return total_loss

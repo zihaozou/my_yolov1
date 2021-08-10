@@ -79,7 +79,7 @@ class first20Net(nn.Module):
 ##Pre-Trained VGG11
 class pretrainedVGG11(nn.Module):
     pretrainURL='https://download.pytorch.org/models/vgg11_bn-6002323d.pth'
-    def __init__(self):
+    def __init__(self,do):
         super(pretrainedVGG11,self).__init__()
         self.features=nn.Sequential(
             nn.Conv2d(3,64,3,padding=1,stride=2),
@@ -116,7 +116,7 @@ class pretrainedVGG11(nn.Module):
             nn.Flatten(),
             nn.Linear(512*7*7,4096),
             nn.LeakyReLU(0.1),
-            nn.Dropout(),
+            nn.Dropout(p= do),
             nn.Linear(4096,7*7*30),
         )
         
@@ -126,7 +126,7 @@ class pretrainedVGG11(nn.Module):
         new=x.detach().clone()
         new[:,:,:,:10]=torch.sigmoid(x[:,:,:,:10])
         new[:,:,:,10:]=torch.softmax(x[:,:,:,10:],dim=3)
-        return x
+        return new
 
 
 class vgg19(nn.Module):
@@ -148,8 +148,8 @@ class vgg19(nn.Module):
 
 
 
-def loadvgg11(cloud=False,pretrain=False):
-    vgg=pretrainedVGG11()
+def loadvgg11(cloud=False,pretrain=False,do=0.6):
+    vgg=pretrainedVGG11(do)
     if pretrain:
         state=vgg.state_dict()
         if cloud:
