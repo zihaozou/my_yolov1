@@ -1,0 +1,15 @@
+每个epoch结束后添加测试图片
+
+
+
+添加224*224输入功能，然后为其添加添加基底pth文件
+
+
+
+更多的augmentation
+
+
+
+
+添加train mode，有只做classification的train，
+full train， combine train（一次full train后classification train）
