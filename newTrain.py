@@ -8,8 +8,10 @@ from torch.autograd.variable import Variable
 from yoloLoss import yoloLoss
 import torch.optim as op
 from torch.utils.data import DataLoader
+from drawBox import drawBBoxes
 from torch.utils.tensorboard import SummaryWriter
-
+from torchvision.transforms.functional import resize
+import cv2
 cloudOutputDir='/output/'
 cloudInputDir='/input0/'
 
@@ -35,7 +37,7 @@ def main():
     print('using device:'+device)
 
     writer=SummaryWriter(log_dir='./tf_dir/'+str(time.time()))
-    
+    testImg=cv2.imread('test.jpeg')
 
 
     model=pretrainedVGG11().to(device)
@@ -44,7 +46,7 @@ def main():
     if args.retrain is not None:
         model.load_state_dict(torch.load(cloudOutputDir+args.retrain))
     criterion = yoloLoss(7,2,device=device)
-    
+    optimizer=op.SGD(model.parameters(),lr=args.learning_rate,momentum=0.9,weight_decay=0.0005)
     
     if args.cloud:
         dataRoot=cloudInputDir
@@ -59,7 +61,7 @@ def main():
 
 
 
-    optimizer=op.SGD(model.parameters(),lr=args.learning_rate,momentum=0.9,weight_decay=0.0005)
+    
     #sch=op.lr_scheduler.MultiStepLR(optimizer,step_size=args.sch_step_size,verbose=True)
     best_loss=numpy.inf
     print('start training')
@@ -77,6 +79,7 @@ def main():
         if best_loss > loss[0]:
             best_loss=loss[0]
             torch.save(model.state_dict(),cloudOutputDir+'bestWeight.pth')
+        recordTestImg(model,testImg,224,e,writer)
         #sch.step()
     torch.save(model.state_dict(),cloudOutputDir+'vggYolo.pth')
     writer.close()
@@ -136,5 +139,11 @@ def writeScalar(writer,inWitch,meanJ,meanLoc,meanCon,meanNocon,meanNoobj,meanCls
     writer.add_scalar(inWitch+'Noobj',meanNoobj,e)
     writer.add_scalar(inWitch+'Cls',meanCls,e)
 
+def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer):
+    model.eval()
+    imgTensor=resize(torch.tensor(testImg.transpose([2,0,1])),[inputSize,inputSize])
+    pred=model(imgTensor.unsqueeze(0))
+    img,_=drawBBoxes(testImg,pred,0.5,7,inputSize)
+    writer.add_image('Test/'+str(e), img, e)
 if __name__ == '__main__':
     main()
