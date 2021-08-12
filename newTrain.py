@@ -91,7 +91,7 @@ def main():
         if best_loss > loss[0]:
             best_loss=loss[0]
             torch.save(model.state_dict(),cloudOutputDir+'bestWeight.pth')
-        recordTestImg(model,testImg,224,e,writer)
+        recordTestImg(model,testImg,224,e,writer,device)
         #sch.step()
     torch.save(model.state_dict(),cloudOutputDir+'vggYolo.pth')
     writer.close()
@@ -154,9 +154,9 @@ def writeScalar(writer,inWitch,meanJ,meanLoc,meanCon,meanNocon,meanNoobj,meanCls
     writer.add_scalar(inWitch+'Noobj',meanNoobj,e)
     writer.add_scalar(inWitch+'Cls',meanCls,e)
 
-def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer):
+def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer,device):
     model.eval()
-    imgTensor=resize(torch.tensor(testImg.transpose([2,0,1])),[inputSize,inputSize])
+    imgTensor=resize(torch.tensor(testImg.transpose([2,0,1])),[inputSize,inputSize]).to(device)
     pred=model(imgTensor.unsqueeze(0))
     img,_=drawBBoxes(testImg,pred,0.5,7,inputSize)
     writer.add_image('Test/'+str(e), img, e)
