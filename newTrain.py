@@ -2,6 +2,7 @@ import argparse
 import numpy
 import random
 import torch
+import torchvision
 from myVOCDataSet import loadVOCTrainDataSet, loadVOCValDataSet
 from myYOLOModel import pretrainedVGG11
 from torch.autograd.variable import Variable
@@ -12,7 +13,7 @@ from drawBox import drawBBoxes
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms.functional import resize
 import cv2
-
+import torchvision.transforms.functional as tfFunc
 
 
 parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
@@ -156,7 +157,7 @@ def writeScalar(writer,inWitch,meanJ,meanLoc,meanCon,meanNocon,meanNoobj,meanCls
 
 def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer,device):
     model.eval()
-    imgTensor=Variable(resize(torch.tensor(testImg.transpose([2,0,1])),[inputSize,inputSize]).unsqueeze(0)).to(device)
+    imgTensor=Variable(resize(tfFunc.to_tensor(testImg.transpose([2,0,1])),[inputSize,inputSize]).unsqueeze(0)).to(device)
     pred=model(imgTensor)
     img,_=drawBBoxes(testImg,pred,0.5,7,inputSize)
     writer.add_image('Test/'+str(e), img, e)
