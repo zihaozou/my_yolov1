@@ -11,6 +11,7 @@ def drawBBoxes(imgArr,pred,thrhd,gridSize,inputSize):
     img=torch.tensor(np.transpose(imgArr,[2,0,1]))
     temp1=(torch.arange(7)*gridSize).unsqueeze(1).expand(-1,7).unsqueeze(-1)
     temp2=(torch.arange(7)*gridSize).unsqueeze(0).expand(7,-1).unsqueeze(-1)
+    pred=pred.squeeze()
     pred[:,:,[0,1,5,6]]=pred[:,:,[0,1,5,6]]*gridSize+(torch.cat((temp1,temp2,temp1,temp2),2))
     pred[:,:,[2,3,7,8]]=pred[:,:,[2,3,7,8]]*inputSize
     gridList=pred.view(-1,30)
