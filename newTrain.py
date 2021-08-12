@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
 parser.add_argument('--cloud','-c',nargs='?',const=1,default=False,type=bool,help='if on cloud')
 parser.add_argument('--gpu','-g',nargs='?',const=1,default=False,type=bool,help='if use gpu')
 parser.add_argument('--weighted','-w',nargs='?',const=1,type=str,default=None,help='if use pretrained weight')
-parser.add_argument('--batch-size','-b',nargs='?',const=1,default=1,type=int,help='set the batch size')
+parser.add_argument('--batch-size','-b',nargs='?',const=32,default=1,type=int,help='set the batch size')
 parser.add_argument('--epochs','-e',nargs='?',const=1,default=50,type=int,help='the epoch number')
 parser.add_argument('--num-workers','-n',nargs='?',const=1,default=1,type=int,help='number of workers to load data')
 parser.add_argument('--learning-rate','-l',nargs='?',const=1,default=1e-3,type=float)
@@ -127,7 +127,7 @@ def train(model,loader,optimizer,lossFunc,device):
     meanNoobj=0
     meanCls=0
     lenLoader=len(loader)
-    for b,(image,target) in enumerate(loader):
+    for b,(image,target) in enumerate(loader,):
         image=Variable(image).to(device)
         target=Variable(target).to(device)
         pred=model(image,False)
@@ -156,8 +156,8 @@ def writeScalar(writer,inWitch,meanJ,meanLoc,meanCon,meanNocon,meanNoobj,meanCls
 
 def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer,device):
     model.eval()
-    imgTensor=resize(torch.tensor(testImg.transpose([2,0,1])),[inputSize,inputSize]).to(device)
-    pred=model(imgTensor.unsqueeze(0))
+    imgTensor=Variable(resize(torch.tensor(testImg.transpose([2,0,1])),[inputSize,inputSize]).unsqueeze(0)).to(device)
+    pred=model(imgTensor)
     img,_=drawBBoxes(testImg,pred,0.5,7,inputSize)
     writer.add_image('Test/'+str(e), img, e)
 if __name__ == '__main__':

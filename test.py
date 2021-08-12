@@ -1,6 +1,6 @@
 
 from torchvision.datasets import CIFAR100
-
+import py
 
 cifarTrainDataset=CIFAR100(root='../data',
                                 train=True,
