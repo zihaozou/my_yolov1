@@ -62,7 +62,6 @@ class myVOCtransform(object):
             img=self.RandomSaturation(img)
             img=self.RandomHue(img)
             img=self.randomBlur(img)
-            img,boxList=self.randomFlip(img,boxList)
             cropConstr=[leftMost,topMost,rightMost,botMost]
             img,boxList=self.randomCrop(img,cropConstr,boxList)
         if img.shape!=[3,self.inputSize,self.inputSize]:

@@ -1,6 +1,6 @@
 import argparse
 import numpy
-import time
+import random
 import torch
 from myVOCDataSet import loadVOCTrainDataSet, loadVOCValDataSet
 from myYOLOModel import pretrainedVGG11
@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
 parser.add_argument('--cloud','-c',nargs='?',const=1,default=False,type=bool,help='if on cloud')
 parser.add_argument('--gpu','-g',nargs='?',const=1,default=False,type=bool,help='if use gpu')
 parser.add_argument('--weighted','-w',nargs='?',const=1,type=str,default=None,help='if use pretrained weight')
-parser.add_argument('--batch-size','-b',nargs='?',const=1,default=32,type=int,help='set the batch size')
+parser.add_argument('--batch-size','-b',nargs='?',const=1,default=1,type=int,help='set the batch size')
 parser.add_argument('--epochs','-e',nargs='?',const=1,default=50,type=int,help='the epoch number')
 parser.add_argument('--num-workers','-n',nargs='?',const=1,default=1,type=int,help='number of workers to load data')
 parser.add_argument('--learning-rate','-l',nargs='?',const=1,default=1e-3,type=float)
@@ -40,15 +40,23 @@ def main():
         device='cpu'
     print('using device:'+device)
 
-    writer=SummaryWriter(log_dir='./tf_dir/'+str(time.time()))
+    writer=SummaryWriter(log_dir='./tf_dir/'+str(random.randint(0,1000)))
     testImg=cv2.imread('test.jpeg')
 
 
     model=pretrainedVGG11().to(device)
     if args.weighted is not None:
-        model.load_state_dict(torch.load(cloudInputDir+args.weighted))
+        if args.cloud:
+            wpath=cloudInputDir+args.weighted
+        else:
+            wpath=args.weighted
+            model.load_state_dict(torch.load(wpath))
     if args.retrain is not None:
-        model.load_state_dict(torch.load(cloudOutputDir+args.retrain))
+        if args.cloud:
+            rpath=cloudOutputDir+args.retrain
+        else:
+            rpath=args.retrain
+        model.load_state_dict(torch.load(rpath))
     criterion = yoloLoss(7,2,device=device)
     optimizer=op.SGD(model.parameters(),lr=args.learning_rate,momentum=0.9,weight_decay=0.0005)
     
@@ -124,6 +132,9 @@ def train(model,loader,optimizer,lossFunc,device):
         target=Variable(target).to(device)
         pred=model(image,False)
         loss,loc_loss,cont_loss,nocont_loss,noobj_loss,cls_loss=lossFunc(pred,target)
+        if torch.isnan(loss):
+            print('diverge')
+            exit()
         meanJ+=loss.item()
         meanLoc+=loc_loss.item()
         meanCon+=cont_loss.item()
