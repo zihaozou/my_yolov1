@@ -35,7 +35,7 @@ class pretrainedVGG11(nn.Module):
             nn.Linear(512*7*7,1024),
             nn.LeakyReLU(0.1),
             nn.Dropout(p= 0.5),
-            nn.Linear(1024,20),
+            nn.Linear(1024,1000),
         )
         self.detector=nn.Sequential(
             nn.Conv2d(512,512,3,padding=1),

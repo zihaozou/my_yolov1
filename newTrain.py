@@ -12,24 +12,27 @@ from drawBox import drawBBoxes
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms.functional import resize
 import cv2
-cloudOutputDir='/output/'
-cloudInputDir='/input0/'
+
 
 
 parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
 parser.add_argument('--cloud','-c',nargs='?',const=1,default=False,type=bool,help='if on cloud')
 parser.add_argument('--gpu','-g',nargs='?',const=1,default=False,type=bool,help='if use gpu')
 parser.add_argument('--weighted','-w',nargs='?',const=1,type=str,default=None,help='if use pretrained weight')
-parser.add_argument('--batch-size','-b',nargs='?',const=1,default=1,type=int,help='set the batch size')
+parser.add_argument('--batch-size','-b',nargs='?',const=1,default=32,type=int,help='set the batch size')
 parser.add_argument('--epochs','-e',nargs='?',const=1,default=50,type=int,help='the epoch number')
 parser.add_argument('--num-workers','-n',nargs='?',const=1,default=1,type=int,help='number of workers to load data')
 parser.add_argument('--learning-rate','-l',nargs='?',const=1,default=1e-3,type=float)
 parser.add_argument('--retrain','-r',nargs='?',const=1,default=None,type=str)
 parser.add_argument('--sch-step-size','-s',nargs='?',const=1,default=30,type=int)
 parser.add_argument('--download','-dl',nargs='?',const=1,default=False,type=bool)
+parser.add_argument('--cloud-input','-ci',nargs='?',const=1,type=str,default='/input0/')
+parser.add_argument('--cloud-output','-co',nargs='?',const=1,type=str,default='/output/')
 def main():
     args=parser.parse_args()
     print(args)
+    cloudOutputDir=args.cloud_input
+    cloudInputDir=args.cloud_output
     if args.gpu:
         device= 'cuda' if torch.cuda.is_available() else 'cpu'
     else:

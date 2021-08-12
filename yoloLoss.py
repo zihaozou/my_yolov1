@@ -45,6 +45,8 @@ def compute_iou(box1, box2):
 
 
 class yoloLoss(nn.Module):
+    inputSize=224
+    gridSize=32
     def __init__(self,S,B,device='cpu'):
         super(yoloLoss,self).__init__()
         self.S = S
@@ -92,12 +94,12 @@ class yoloLoss(nn.Module):
         for i in range(0,box_target.size()[0],2): #choose the best iou box
             box1 = box_pred[i:i+2]
             box1_xyxy = Variable(torch.FloatTensor(box1.size())).to(self.device)
-            box1_xyxy[:,:2] = box1[:,:2]*64. -0.5*(box1[:,2:4]*448)
-            box1_xyxy[:,2:4] = box1[:,:2]*64 +0.5*(box1[:,2:4]*448)
+            box1_xyxy[:,:2] = box1[:,:2]*self.gridSize -0.5*(box1[:,2:4]*self.inputSize)
+            box1_xyxy[:,2:4] = box1[:,:2]*self.gridSize +0.5*(box1[:,2:4]*self.inputSize)
             box2 = box_target[i].view(-1,5)
             box2_xyxy = Variable(torch.FloatTensor(box2.size())).to(self.device)
-            box2_xyxy[:,:2] = box2[:,:2]*64 -0.5*(box2[:,2:4]*448)
-            box2_xyxy[:,2:4] = box2[:,:2]*64 +0.5*(box2[:,2:4]*448)
+            box2_xyxy[:,:2] = box2[:,:2]*self.gridSize -0.5*(box2[:,2:4]*self.inputSize)
+            box2_xyxy[:,2:4] = box2[:,:2]*self.gridSize +0.5*(box2[:,2:4]*self.inputSize)
             iou = compute_iou(box1_xyxy[:,:4],box2_xyxy[:,:4]) #[2,1]
             max_iou,max_index = iou.max(0)
             max_index = max_index.data
