@@ -83,11 +83,11 @@ def main():
         loss=train(model,train07Loader,optimizer,criterion,device)
         if args.add_train:
             loss+=train(model,train12Loader,optimizer,criterion,device)
-        writeScalar(writer,'Train',loss[0],loss[1],loss[2],loss[3],loss[4],loss[5])
+        writeScalar(writer,'Train',loss[0],loss[1],loss[2],loss[3],loss[4],loss[5],e)
 
         model.eval()
         loss=eval(model,val07Loader,criterion,device)
-        writeScalar(writer,'Val',loss[0],loss[1],loss[2],loss[3],loss[4],loss[5])
+        writeScalar(writer,'Val',loss[0],loss[1],loss[2],loss[3],loss[4],loss[5],e)
         if best_loss > loss[0]:
             best_loss=loss[0]
             torch.save(model.state_dict(),cloudOutputDir+'bestWeight.pth')
