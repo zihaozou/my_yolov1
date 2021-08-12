@@ -157,7 +157,7 @@ def writeScalar(writer,inWitch,meanJ,meanLoc,meanCon,meanNocon,meanNoobj,meanCls
 
 def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer,device):
     model.eval()
-    imgTensor=Variable(resize(tfFunc.to_tensor(testImg.transpose([2,0,1])),[inputSize,inputSize]).unsqueeze(0)).to(device)
+    imgTensor=Variable(resize(tfFunc.to_tensor(testImg),[inputSize,inputSize]).unsqueeze(0)).to(device)
     pred=model(imgTensor)
     img,_=drawBBoxes(testImg,pred,0.5,7,inputSize)
     writer.add_image('Test/'+str(e), img, e)
