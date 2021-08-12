@@ -32,8 +32,8 @@ parser.add_argument('--cloud-output','-co',nargs='?',const=1,type=str,default='/
 def main():
     args=parser.parse_args()
     print(args)
-    cloudOutputDir=args.cloud_input
-    cloudInputDir=args.cloud_output
+    cloudOutputDir=args.cloud_output
+    cloudInputDir=args.cloud_input
     if args.gpu:
         device= 'cuda' if torch.cuda.is_available() else 'cpu'
     else:
