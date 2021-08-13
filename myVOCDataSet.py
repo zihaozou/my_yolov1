@@ -101,6 +101,12 @@ class myVOCtransform(object):
             boxesArea=(boxes[:,2]-boxes[:,0])*(boxes[:,3]-boxes[:,1])
             mask=((inter/boxesArea)>=.6).unsqueeze(-1).expand_as(boxes)
             boxes=boxes[mask].view(-1,5)
+            boxes[:,:2]=boxes[:,:2]-cropBox[:,:2].expand_as(boxes[:,:2])
+            boxes[:,2:4]=boxes[:,2:4]-cropBox[:,:2].expand_as(boxes[:,2:4])
+            boxes[boxes[:,0]<0,0]=0
+            boxes[boxes[:,1]<0,1]=0
+            boxes[boxes[:,2]>(bot-top),2]=bot-top-1
+            boxes[boxes[:,3]>(right-left),3]=right-left-1
             img=img.crop((left,top,right,bot))
         return img,boxes
     def randomBrightness(self,img:Image.Image):
@@ -122,7 +128,7 @@ class myVOCtransform(object):
     def reSize(self,img:Image.Image,boxes):
         imgW,imgH=img.size
         img=img.resize((self.inputSize,self.inputSize))
-        resizeFactor=torch.tensor([self.inputSize/imgH,self.inputSize/imgH,self.inputSize/imgW,self.inputSize/imgW]).unsqueeze(0).expand_as(boxes[:,:4])
+        resizeFactor=torch.tensor([self.inputSize/imgH,self.inputSize/imgW,self.inputSize/imgH,self.inputSize/imgW]).unsqueeze(0).expand_as(boxes[:,:4])
         boxes[:,:4]=boxes[:,:4]*resizeFactor
         return img,boxes
 
