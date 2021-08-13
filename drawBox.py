@@ -35,13 +35,14 @@ def drawBBoxes(imgArr,pred,thrhd,gridSize,inputSize,device):
         _,i=torch.max(cornerList[:,4],dim=0)
         highest=cornerList[i,:]
         cornerList=cornerList[torch.arange(cornerList.size(0),device=device)!=i,:]
-        deleteList=torch.BoolTensor(cornerList.size(0))
-        for x in range(cornerList.size(0)):
-            comparing=cornerList[x,:]
-            if compute_iou(highest[:4].unsqueeze(0),comparing[:4].unsqueeze(0))<thrhd:
-                deleteList[x]=True
-        deleteList=deleteList.unsqueeze(-1).expand_as(cornerList)
-        cornerList=cornerList[deleteList].view(-1,6)
+        if len(cornerList)!=0:
+            deleteList=torch.BoolTensor(cornerList.size(0))
+            for x in range(cornerList.size(0)):
+                comparing=cornerList[x,:]
+                if compute_iou(highest[:4].unsqueeze(0),comparing[:4].unsqueeze(0))<thrhd:
+                    deleteList[x]=True
+            deleteList=deleteList.unsqueeze(-1).expand_as(cornerList)
+            cornerList=cornerList[deleteList].view(-1,6)
         SolidCorner=torch.cat((SolidCorner,highest.unsqueeze(0)),0)
     for i,r in enumerate(SolidCorner):
         imgArr=cv2.rectangle(imgArr,(int(r[1]),int(r[0])),(int(r[3]),int(r[2])),(255,0,0),1)
