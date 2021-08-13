@@ -16,12 +16,11 @@ from torchvision.transforms.functional import resize
 import cv2
 import torchvision.transforms.functional as tfFunc
 
-
 parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
 parser.add_argument('--cloud','-c',nargs='?',const=1,default=False,type=bool,help='if on cloud')
 parser.add_argument('--gpu','-g',nargs='?',const=1,default=False,type=bool,help='if use gpu')
 parser.add_argument('--weighted','-w',nargs='?',const=1,type=str,default=None,help='if use pretrained weight')
-parser.add_argument('--batch-size','-b',nargs='?',const=1,default=1,type=int,help='set the batch size')
+parser.add_argument('--batch-size','-b',nargs='?',const=1,default=8,type=int,help='set the batch size')
 parser.add_argument('--epochs','-e',nargs='?',const=1,default=50,type=int,help='the epoch number')
 parser.add_argument('--num-workers','-n',nargs='?',const=1,default=0,type=int,help='number of workers to load data')
 parser.add_argument('--learning-rate','-l',nargs='?',const=1,default=1e-3,type=float)

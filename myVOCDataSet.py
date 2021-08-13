@@ -1,3 +1,4 @@
+from drawBox import drawBBoxes
 import random
 import numpy
 import torch
@@ -16,11 +17,7 @@ VOC_CLASSES = {    # always index 0
     'cow':9, 'diningtable':10, 'dog':11, 'horse':12,
     'motorbike':13, 'person':14, 'pottedplant':15,
     'sheep':16, 'sofa':17, 'train':18, 'tvmonitor':19}
-VOCLIST=['aeroplane', 'bicycle', 'bird', 'boat',
-    'bottle', 'bus', 'car', 'cat', 'chair',
-    'cow', 'diningtable', 'dog', 'horse',
-    'motorbike', 'person', 'pottedplant',
-    'sheep', 'sofa', 'train', 'tvmonitor']
+
 class myVOCtransform(object):
     changeFactor=[0.6,1,1.2,1.3,1.5,1.8]
     def __init__(self,classlist,S=7,B=2,C=20,inputSize=224,train=False):
@@ -35,21 +32,22 @@ class myVOCtransform(object):
         random.seed()
         objectList=anno['annotation']['object']
         boxList=torch.FloatTensor(size=[len(objectList),5])
-        for i,obj in enumerate(objectList):
-            xmin=int(obj['bndbox']['ymin'])
-            ymin=int(obj['bndbox']['xmin'])
-            xmax=int(obj['bndbox']['ymax'])
-            ymax=int(obj['bndbox']['xmax'])
+        for i,obj in enumerate(objectList):#妈的voc的index从1开始算
+            xmin=int(obj['bndbox']['ymin'])-1
+            ymin=int(obj['bndbox']['xmin'])-1
+            xmax=int(obj['bndbox']['ymax'])-1
+            ymax=int(obj['bndbox']['xmax'])-1
             cls=obj['name']
             boxList[i,:]=torch.tensor([xmin,ymin,xmax,ymax,VOC_CLASSES[cls]+self.B*5])
         target=torch.zeros(size=[self.S,self.S,self.B*5+self.C])
+        #originImg=img
         if self.train:
             img=self.randomBrightness(img)
             img=self.randomSharporBlur(img)
             img=self.randomContrast(img)
             img=self.randomSatuation(img)
             img,boxList=self.randomFlip(img,boxList)
-            img,boxList=self.randomCrop(img,boxList)
+            #img,boxList=self.randomCrop(img,boxList)#random crop因效果很差被取消
         if img.size!=(3,self.inputSize,self.inputSize):
             img,boxList=self.reSize(img,boxList)
         gridSize=self.inputSize//self.S
@@ -60,6 +58,8 @@ class myVOCtransform(object):
             w=(box[3]-box[1])/self.inputSize
             gridX=int(x//gridSize)
             gridY=int(y//gridSize)
+            if gridX>=7 or gridY>=7:
+                print(gridX,gridY)
             delX=float(x%gridSize)/float(gridSize)
             delY=float(y%gridSize)/float(gridSize)
             if target[gridX,gridY,4]!=1:
@@ -70,16 +70,19 @@ class myVOCtransform(object):
                     target[gridX,gridY,b*5+3]=w
                     target[gridX,gridY,b*5+4]=1
                 target[gridX,gridY,int(box[4])]=1
+        #imgArr=numpy.array(originImg)
+        #imgSave,_=drawBBoxes(imgArr,target,0.5,32,224,'cpu')
+        #tfFunc.to_pil_image(imgSave).save('save.jpg')
         return tfFunc.to_tensor(img),target
     def randomFlip(self,img:Image.Image,boxes):
         if random.random()<.5:
             W,_=img.size
             img=img.transpose(Image.FLIP_LEFT_RIGHT)
-            boxes[:,[1,3]]=W-boxes[:,[3,1]]
+            boxes[:,[1,3]]=W-boxes[:,[3,1]]-1
         return img,boxes
     def randomCrop(self,img:Image.Image,boxes:torch.Tensor):
         #只有剪切后剩余面积大于原面积的60%的bbox才会被保留
-        if random.random()<.5:
+        if random.random()>=0:
             W,H=img.size
             N=boxes.size(0)
             left=random.randint(0,int(W*.2))
@@ -87,11 +90,11 @@ class myVOCtransform(object):
             right=random.randint(int(W*.8),W)
             bot=random.randint(int(H*.8),H)
             cropBox=torch.tensor([left,top,right,bot]).unsqueeze(0)
-            lt = torch.max(#计算右上角盒子的顶点
+            lt = torch.max(#计算左上角盒子的顶点
                 boxes[:,:2].unsqueeze(1).expand(N,1,2),
                 cropBox[:,:2].unsqueeze(0).expand(N,1,2),
             )
-            rb = torch.min(#计算左下角盒子的顶点
+            rb = torch.min(#计算右下角盒子的顶点
                 boxes[:,2:4].unsqueeze(1).expand(N,1,2),
                 cropBox[:,2:].unsqueeze(0).expand(N,1,2),
             )

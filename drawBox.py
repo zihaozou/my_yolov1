@@ -1,11 +1,14 @@
 import torch
 import numpy as np
 import cv2
-from myVOCDataSet import VOCLIST
 from yoloLoss import compute_iou
 import numpy as np
 from torchvision.transforms.functional import to_tensor
-
+VOCLIST=['aeroplane', 'bicycle', 'bird', 'boat',
+    'bottle', 'bus', 'car', 'cat', 'chair',
+    'cow', 'diningtable', 'dog', 'horse',
+    'motorbike', 'person', 'pottedplant',
+    'sheep', 'sofa', 'train', 'tvmonitor']
 
 def drawBBoxes(imgArr,pred,thrhd,gridSize,inputSize,device):
 
