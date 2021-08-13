@@ -9,7 +9,7 @@
 更多的augmentation
 
 
-
+drawBox可以修改
 
 添加train mode，有只做classification的train，
 full train， combine train（一次full train后classification train）

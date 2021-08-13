@@ -21,9 +21,9 @@ parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
 parser.add_argument('--cloud','-c',nargs='?',const=1,default=False,type=bool,help='if on cloud')
 parser.add_argument('--gpu','-g',nargs='?',const=1,default=False,type=bool,help='if use gpu')
 parser.add_argument('--weighted','-w',nargs='?',const=1,type=str,default=None,help='if use pretrained weight')
-parser.add_argument('--batch-size','-b',nargs='?',const=32,default=1,type=int,help='set the batch size')
+parser.add_argument('--batch-size','-b',nargs='?',const=1,default=1,type=int,help='set the batch size')
 parser.add_argument('--epochs','-e',nargs='?',const=1,default=50,type=int,help='the epoch number')
-parser.add_argument('--num-workers','-n',nargs='?',const=1,default=1,type=int,help='number of workers to load data')
+parser.add_argument('--num-workers','-n',nargs='?',const=1,default=0,type=int,help='number of workers to load data')
 parser.add_argument('--learning-rate','-l',nargs='?',const=1,default=1e-3,type=float)
 parser.add_argument('--retrain','-r',nargs='?',const=1,default=None,type=str)
 parser.add_argument('--sch-step-size','-s',nargs='?',const=1,default=30,type=int)
@@ -67,7 +67,7 @@ def main():
     else:
         dataRoot='../data'
     train07DataSet=loadVOCTrainDataSet(root=dataRoot,d=args.download)
-    train07Loader=DataLoader(train07DataSet,batch_size=args.batch_size,shuffle=True,num_workers=args.num_workers)
+    train07Loader=DataLoader(train07DataSet,batch_size=args.batch_size,shuffle=False,num_workers=args.num_workers)
     val07DataSet=loadVOCValDataSet(root=dataRoot,d=args.download)
     val07Loader=DataLoader(val07DataSet,batch_size=args.batch_size,shuffle=True,num_workers=args.num_workers)
     train12DataSet=loadVOCTrainDataSet(root=dataRoot,year='2012',d=args.download)
@@ -131,7 +131,7 @@ def train(model,loader,optimizer,lossFunc,device):
     meanNoobj=0
     meanCls=0
     lenLoader=len(loader)
-    for b,(image,target) in enumerate(loader,):
+    for b,(image,target) in enumerate(loader):
         image=Variable(image).to(device)
         target=Variable(target).to(device)
         pred=model(image,False)
