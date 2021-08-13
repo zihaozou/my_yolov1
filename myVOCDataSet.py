@@ -77,14 +77,29 @@ class myVOCtransform(object):
             img=img.transpose(Image.FLIP_LEFT_RIGHT)
             boxes[:,[1,3]]=W-boxes[:,[3,1]]
         return img,boxes
-    def randomCrop(self,img:Image.Image,boxes):
+    def randomCrop(self,img:Image.Image,boxes:torch.Tensor):
+        #只有剪切后剩余面积大于原面积的60%的bbox才会被保留
         if random.random()<.5:
             W,H=img.size
+            N=boxes.size(0)
             left=random.randint(0,int(W*.2))
             top=random.randint(0,int(H*.2))
             right=random.randint(int(W*.8),W)
             bot=random.randint(int(H*.8),H)
-            mask=((boxes[:,1]>left)+(boxes[:,0]>top)+(boxes[:,3]<right)+(boxes[:,2]<bot)).unsqueeze(-1).expand_as(boxes)
+            cropBox=torch.tensor([left,top,right,bot]).unsqueeze(0)
+            lt = torch.max(#计算右上角盒子的顶点
+                boxes[:,:2].unsqueeze(1).expand(N,1,2),
+                cropBox[:,:2].unsqueeze(0).expand(N,1,2),
+            )
+            rb = torch.min(#计算左下角盒子的顶点
+                boxes[:,2:4].unsqueeze(1).expand(N,1,2),
+                cropBox[:,2:].unsqueeze(0).expand(N,1,2),
+            )
+            wh = rb - lt
+            wh[wh<0] = 0  # clip at 0
+            inter = (wh[:,:,0] * wh[:,:,1]).squeeze()
+            boxesArea=(boxes[:,2]-boxes[:,0])*(boxes[:,3]-boxes[:,1])
+            mask=((inter/boxesArea)>=.6).unsqueeze(-1).expand_as(boxes)
             boxes=boxes[mask].view(-1,5)
             img=img.crop((left,top,right,bot))
         return img,boxes

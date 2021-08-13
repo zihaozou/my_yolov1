@@ -67,7 +67,7 @@ def main():
     else:
         dataRoot='../data'
     train07DataSet=loadVOCTrainDataSet(root=dataRoot,d=args.download)
-    train07Loader=DataLoader(train07DataSet,batch_size=args.batch_size,shuffle=False,num_workers=args.num_workers)
+    train07Loader=DataLoader(train07DataSet,batch_size=args.batch_size,shuffle=True,num_workers=args.num_workers)
     val07DataSet=loadVOCValDataSet(root=dataRoot,d=args.download)
     val07Loader=DataLoader(val07DataSet,batch_size=args.batch_size,shuffle=True,num_workers=args.num_workers)
     train12DataSet=loadVOCTrainDataSet(root=dataRoot,year='2012',d=args.download)
