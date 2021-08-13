@@ -2,6 +2,7 @@ import argparse
 import numpy
 import random
 import torch
+import time
 import torchvision
 from myVOCDataSet import loadVOCTrainDataSet, loadVOCValDataSet
 from myYOLOModel import pretrainedVGG11
@@ -41,7 +42,7 @@ def main():
         device='cpu'
     print('using device:'+device)
 
-    writer=SummaryWriter(log_dir='./tf_dir/'+str(random.randint(0,1000)))
+    writer=SummaryWriter(log_dir='./tf_dir/'+time.asctime( time.localtime(time.time()) ))
     testImg=cv2.imread('test.jpeg')
 
 
@@ -79,6 +80,7 @@ def main():
     best_loss=numpy.inf
     print('start training')
     for e in range(args.epochs):
+        
         model.train()
         print('start epoch '+str(e))
         loss=train(model,train07Loader,optimizer,criterion,device)
@@ -92,6 +94,7 @@ def main():
         if best_loss > loss[0]:
             best_loss=loss[0]
             torch.save(model.state_dict(),cloudOutputDir+'bestWeight.pth')
+        
         recordTestImg(model,testImg,224,e,writer,device)
         #sch.step()
     torch.save(model.state_dict(),cloudOutputDir+'vggYolo.pth')
@@ -159,7 +162,7 @@ def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer,device):
     model.eval()
     imgTensor=Variable(resize(tfFunc.to_tensor(testImg),[inputSize,inputSize]).unsqueeze(0)).to(device)
     pred=model(imgTensor)
-    img,_=drawBBoxes(testImg,pred,0.5,7,inputSize)
+    img,_=drawBBoxes(testImg,pred,0.5,7,inputSize,device)
     writer.add_image('Test/'+str(e), img, e)
 if __name__ == '__main__':
     main()
