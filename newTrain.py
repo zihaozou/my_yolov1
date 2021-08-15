@@ -10,10 +10,8 @@ import torch.optim as op
 from torch.utils.data import DataLoader
 from drawBox import drawBBoxes
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.transforms.functional import resize
-import cv2
 import torchvision.transforms.functional as tfFunc
-
+from PIL import Image
 parser = argparse.ArgumentParser(description='PyTorch Yolo Training')
 parser.add_argument('--cloud','-c',nargs='?',const=1,default=False,type=bool,help='if on cloud')
 parser.add_argument('--gpu','-g',nargs='?',const=1,default=False,type=bool,help='if use gpu')
@@ -40,7 +38,7 @@ def main():
     print('using device:'+device)
 
     writer=SummaryWriter(log_dir='./tf_dir/'+time.asctime( time.localtime(time.time()) ))
-    testImg=cv2.imread('test.jpeg')
+    testImg=Image.open('test.jpeg')
 
 
     model=pretrainedVGG11().to(device)
@@ -155,11 +153,11 @@ def writeScalar(writer,inWitch,meanJ,meanLoc,meanCon,meanNocon,meanNoobj,meanCls
     writer.add_scalar(inWitch+'Noobj',meanNoobj,e)
     writer.add_scalar(inWitch+'Cls',meanCls,e)
 
-def recordTestImg(model,testImg:numpy.ndarray,inputSize,e,writer,device):
+def recordTestImg(model,testImg:Image.Image,inputSize,e,writer,device):
     model.eval()
-    imgTensor=Variable(resize(tfFunc.to_tensor(testImg),[inputSize,inputSize]).unsqueeze(0)).to(device)
+    imgTensor=Variable(tfFunc.to_tensor(testImg.resize((inputSize,inputSize),Image.ANTIALIAS)).unsqueeze(0)).to(device)
     pred=model(imgTensor)
-    img,_=drawBBoxes(testImg,pred,0.5,7,inputSize,device)
+    img,_=drawBBoxes(testImg,pred,0.5,32,inputSize,device)
     writer.add_image('Test/'+str(e), img, e)
 if __name__ == '__main__':
     main()
