@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.nn.modules.activation import Sigmoid
 
 ##Pre-Trained VGG11
 class pretrainedVGG11(nn.Module):

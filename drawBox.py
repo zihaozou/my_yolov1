@@ -1,8 +1,6 @@
 import torch
-import numpy as np
 import cv2
 from yoloLoss import compute_iou
-import numpy as np
 from torchvision.transforms.functional import to_tensor
 VOCLIST=['aeroplane', 'bicycle', 'bird', 'boat',
     'bottle', 'bus', 'car', 'cat', 'chair',
@@ -22,7 +20,7 @@ def drawBBoxes(imgArr,pred,thrhd,gridSize,inputSize,device):
     classList=gridList[:,10:]-10
     _,classList=classList.max(1)
     _,i=torch.max(boxList[:,:,4],dim=1)
-    boxList=boxList[torch.arange(boxList.size(0),device=device),i]
+    boxList=boxList[torch.arange(boxList.size(0)).to(device),i]
     boxList=torch.cat((boxList,classList.unsqueeze(-1)),1)
 
     mask=(boxList[:,4]>thrhd).unsqueeze(-1).expand_as(boxList)
@@ -32,14 +30,14 @@ def drawBBoxes(imgArr,pred,thrhd,gridSize,inputSize,device):
     cornerList=torch.cat((xyMinList,xyMaxList),1)
     cornerList[:,[0,2]]=(cornerList[:,[0,2]]*imgArr.shape[0]/inputSize)
     cornerList[:,[1,3]]=(cornerList[:,[1,3]]*imgArr.shape[1]/inputSize)
-    cornerList=torch.cat((cornerList.type(torch.IntTensor),boxList[:,4:]),1)
-    SolidCorner=torch.Tensor(device=device)
+    cornerList=torch.cat((cornerList.type(torch.IntTensor).to(device),boxList[:,4:]),1)
+    SolidCorner=torch.Tensor().to(device)
     while len(cornerList)!=0:
         _,i=torch.max(cornerList[:,4],dim=0)
         highest=cornerList[i,:]
-        cornerList=cornerList[torch.arange(cornerList.size(0),device=device)!=i,:]
+        cornerList=cornerList[torch.arange(cornerList.size(0)).to(device)!=i,:]
         if len(cornerList)!=0:
-            deleteList=torch.BoolTensor(cornerList.size(0))
+            deleteList=torch.BoolTensor(cornerList.size(0)).to(device)
             for x in range(cornerList.size(0)):
                 comparing=cornerList[x,:]
                 if compute_iou(highest[:4].unsqueeze(0),comparing[:4].unsqueeze(0))<thrhd:

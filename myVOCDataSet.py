@@ -1,15 +1,10 @@
 from drawBox import drawBBoxes
 import random
-import numpy
 import torch
 from torchvision import datasets
 import torchvision.transforms.functional as tfFunc
-import torchvision.transforms as tf
 from PIL import Image, ImageEnhance, ImageFilter
-import matplotlib.pyplot as plt
-import matplotlib.patches as pch
 from PIL import Image,ImageEnhance,ImageFilter
-from torch.utils.data.dataloader import DataLoader
 CloudInputDir='/input0'
 VOC_CLASSES = {    # always index 0
     'aeroplane':0, 'bicycle':1, 'bird':2, 'boat':3,
