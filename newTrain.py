@@ -1,4 +1,5 @@
 import argparse
+from tqdm import tqdm
 import numpy
 import torch
 import time
@@ -126,7 +127,7 @@ def train(model,loader,optimizer,lossFunc,device):
     meanNoobj=0
     meanCls=0
     lenLoader=len(loader)
-    for b,(image,target) in enumerate(loader):
+    for (image,target) in tqdm(loader):
         image=Variable(image).to(device)
         target=Variable(target).to(device)
         pred=model(image,False)
